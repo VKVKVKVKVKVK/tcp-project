@@ -2,88 +2,19 @@
 
 //source: https://www.binarytides.com/raw-sockets-using-winsock/
 
-//raw tcp packet crafter
+#include "header.hh"
 
-#include <stdio.h>
-#include <winsock2.h>
-#include <ws2tcpip.h> //IP_HDRINCL is here
-#include <conio.h>
-#include <string>
-#include <vector>
+using namespace std;
 
-#pragma comment(lib,"ws2_32.lib") //winsock 2.2 library
-
-#define PACKET_MAX_SIZE 1523 //FIXME
-
-typedef struct ip_hdr
-{
-    unsigned char ip_header_len : 4; // 4-bit header length (in 32-bit words) normally=5 (Means 20 Bytes may be 24 also)
-    unsigned char ip_version : 4; // 4-bit IPv4 version
-    unsigned char ip_tos; // IP type of service
-    unsigned short ip_total_length; // Total length
-    unsigned short ip_id; // Unique identifier
-
-    unsigned char ip_frag_offset : 5; // Fragment offset field
-
-    unsigned char ip_more_fragment : 1;
-    unsigned char ip_dont_fragment : 1;
-    unsigned char ip_reserved_zero : 1;
-
-    unsigned char ip_frag_offset1; //fragment offset
-
-    unsigned char ip_ttl; // Time to live
-    unsigned char ip_protocol; // Protocol(TCP,UDP etc)
-    unsigned short ip_checksum; // IP checksum
-    unsigned int ip_srcaddr; // Source address
-    unsigned int ip_destaddr; // Source address
-} IPV4_HDR, *PIPV4_HDR, FAR * LPIPV4_HDR;
-
-// TCP header: unused
-typedef struct tcp_header
-{
-    unsigned short source_port; // source port
-    unsigned short dest_port; // destination port
-    unsigned int sequence; // sequence number - 32 bits
-    unsigned int acknowledge; // acknowledgement number - 32 bits
-
-    unsigned char ns : 1; //Nonce Sum Flag Added in RFC 3540.
-    unsigned char reserved_part1 : 3; //according to rfc
-    unsigned char data_offset : 4; /*The number of 32-bit words in the TCP header.
-    This indicates where the data begins.
-    The length of the TCP header is always a multiple
-    of 32 bits.*/
-
-    unsigned char fin : 1; //Finish Flag
-    unsigned char syn : 1; //Synchronise Flag
-    unsigned char rst : 1; //Reset Flag
-    unsigned char psh : 1; //Push Flag
-    unsigned char ack : 1; //Acknowledgement Flag
-    unsigned char urg : 1; //Urgent Flag
-
-    unsigned char ecn : 1; //ECN-Echo Flag
-    unsigned char cwr : 1; //Congestion Window Reduced Flag
-
-    ////////////////////////////////
-
-    unsigned short window; // window
-    unsigned short checksum; // checksum
-    unsigned short urgent_pointer; // urgent pointer
-} TCP_HDR, *PTCP_HDR, FAR * LPTCP_HDR, TCPHeader, TCP_HEADER;
-
-int main()
+int init_sock_ip(char* buf, SOCKADDR_IN& dest)
 {
     std::string host("127.0.0.1");
     std::string source_ip("127.0.0.1");
-    char buf[PACKET_MAX_SIZE], *data = NULL; //buf is the complete packet
     SOCKET s;
-    int k = 1;
 
     IPV4_HDR *v4hdr = NULL;
-    TCP_HDR *tcphdr = NULL;
 
-    std::string payload("Malik");
     int optval;
-    SOCKADDR_IN dest;
     hostent *server;
 
     //Initialise Winsock
@@ -102,7 +33,7 @@ int main()
     if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == SOCKET_ERROR)
     {
         printf("Creation of raw socket failed.");
-        return 0;
+        return -1;
     }
     printf("Raw TCP Socket Created successfully.");
     ////////////////////////////////////////////////
@@ -112,7 +43,7 @@ int main()
     if (setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *)&optval, sizeof(optval)) == SOCKET_ERROR)
     {
         printf("failed to set socket in raw mode.");
-        return 0;
+        return -1;
     }
     printf("Successful.");
     ////////////////////////////////////////////////
@@ -122,7 +53,7 @@ int main()
     if ((server = gethostbyname(host.c_str())) == 0)
     {
         printf("Unable to resolve.");
-        return 0;
+        return -1;
     }
     dest.sin_family = AF_INET;
     //dest.sin_port = htons(50000); //your destination port
@@ -134,7 +65,7 @@ int main()
     v4hdr->ip_version = 4;
     v4hdr->ip_header_len = 5;
     v4hdr->ip_tos = 0;
-    v4hdr->ip_total_length = htons(sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size());
+    v4hdr->ip_total_length = htons(sizeof(IPV4_HDR) + sizeof(TCP_HDR));
     v4hdr->ip_id = htons(2);
     v4hdr->ip_frag_offset = 0;
     v4hdr->ip_frag_offset1 = 0;
@@ -147,8 +78,17 @@ int main()
     v4hdr->ip_destaddr = inet_addr(inet_ntoa(dest.sin_addr));
     v4hdr->ip_checksum = 0;
 
+    return s;
+}
+
+size_t craft_packet(char* buf)
+{
+    std::string payload("salut");
+    IPV4_HDR* v4hdr = (IPV4_HDR*)buf;
+    v4hdr->ip_total_length = htons(sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size());
+    TCP_HDR *tcphdr = NULL;
     tcphdr = (TCP_HDR *)&buf[sizeof(IPV4_HDR)]; //get the pointer to the tcp header in the packet
-     //tcp header
+    //tcp header
     tcphdr->source_port = htons(1234);
     tcphdr->dest_port = htons(50000);
 
@@ -162,30 +102,168 @@ int main()
     tcphdr->fin = 0;
     tcphdr->ns = 1;
 
-    tcphdr->checksum = 0;
+    tcphdr->checksum = 0; //FIXME
 
-
-    //memset(tcphdr, 'A', sizeof(TCP_HDR));
-    // Initialize the TCP payload to some rubbish
-    data = &buf[sizeof(IPV4_HDR) + sizeof(TCP_HDR)];
-    //memset(data, '^', payload);
+    char* data = &buf[sizeof(IPV4_HDR) + sizeof(TCP_HDR)];
     memcpy(data, payload.c_str(), payload.size());
+    return sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size();
+}
 
-    printf("\nSending packet...\n");
-
-    while (!_kbhit())
+int send_packet(int sock, char* buf, size_t size, const SOCKADDR_IN& dest)
+{
+    if ((sendto(sock, buf, size, 0, (SOCKADDR *)&dest, sizeof(dest))) == SOCKET_ERROR)
     {
-        printf("%d packets send\r", k++);
-        if ((sendto(s, buf, sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size(), 0,
-                    (SOCKADDR *)&dest, sizeof(dest))) == SOCKET_ERROR)
-        {
+        printf("Error sending Packet : %d", WSAGetLastError());
+        return -1;
+    }
+    return 0;
+}
 
-            printf("Error sending Packet : %d", WSAGetLastError());
+int menu_start() {
+
+    int choix;
+
+    cout << "###############################################" << endl;
+    cout << "#                    MENU                     #" << endl;
+    cout << "#                                             #" << endl;
+    cout << "#  1. Ouverture de connexion                  #" << endl;
+    cout << "#  2. Echange de donnees                      #" << endl;
+    cout << "#  3. Fermeture de connexion                  #" << endl;
+    cout << "#  4. Autres                                  #" << endl;
+    cout << "#                                             #" << endl;
+    cout << "###############################################" << endl;
+    cout << "#  Choix ?                                    #" << endl;
+    cout << "###############################################" << endl;
+
+    cin >> choix;
+    system("CLS");
+    return choix;
+}
+
+void ouverture_connexion(){
+
+    tcp_header tcp{0};
+    system("CLS");
+    cout << "###############################################" << endl;
+    cout << "#                                             #" << endl;
+    cout << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
+    cout << "#  saisir les parametres:                     #" << endl;
+    cout << "#                                             #" << endl;
+    cout << "###############################################\n" << endl;
+
+    cout << "#  Port Source: ???                           #" << endl;
+    cin >> tcp.source_port;
+
+    cout << "#  Port Dest: ???                             #" << endl;
+    cin >> tcp.dest_port;
+
+    cout << "#  Sequence: ???                              #" << endl;
+    cin >> tcp.sequence;
+
+    cout << "#  Acknowledge ???                            #" << endl;
+    cin >> tcp.acknowledge;
+
+    cout << "#  Nonce Sum Flag: ???                        #" << endl;
+    unsigned char ns;
+    cin >> ns;
+    tcp.ns = ns;
+
+    cout << "#  Reserved Part ???                          #" << endl;
+    unsigned char reserved_part;
+    cin >> reserved_part;
+    tcp.reserved_part1 = reserved_part;
+
+    cout << "#  Data offset ???                            #" << endl;
+    unsigned char data_offset;
+    cin >> data_offset;
+    tcp.data_offset = data_offset;
+
+    cout << "#  FIN ???                                    #" << endl;
+    unsigned char fin;
+    cin >> fin;
+    tcp.fin = fin;
+
+    cout << "#  SYN ???                                    #" << endl;
+    unsigned char syn;
+    cin >> syn;
+    tcp.syn = syn;
+
+    cout << "#  RST ???                                    #" << endl;
+    unsigned char rst;
+    cin >> rst;
+    tcp.rst = rst;
+
+    cout << "#  PSH ???                                    #" << endl;
+    unsigned char psh;
+    cin >> psh;
+    tcp.psh = psh;
+
+    cout << "#  ACK???                                     #" << endl;
+    unsigned char ack;
+    cin >> ack;
+    tcp.ack = ack;
+
+    cout << "#  URG ???                                    #" << endl;
+    unsigned char urg;
+    cin >> urg;
+    tcp.urg = urg;
+
+    cout << "#  ECN-Echo Flag ???                          #" << endl;
+    unsigned char ecn;
+    cin >> ecn;
+    tcp.ecn = ecn;
+
+    cout << "#  Congestion Window Reduced ???              #" << endl;
+    unsigned char cwr;
+    cin >> cwr;
+    tcp.cwr = cwr;
+
+    cout << "#  Window: ???                                #" << endl;
+    cin >> tcp.window;
+
+    cout << "#  Checksum: ???                              #" << endl;
+    cin >> tcp.checksum;
+
+    cout << "#  Urgent Pointer : ???                       #" << endl;
+    cin >> tcp.urgent_pointer;
+
+
+    cout << "###############################################" << endl;
+
+
+
+    system("CLS");
+}
+
+int main()
+{
+
+    int choix = menu_start();
+    switch(choix) {
+        case 1 :
+            ouverture_connexion();
             break;
-        }
+        case 2 :
+            break;
+        case 3 :
+            break;
+        case 4 :
+            break;
     }
 
-    closesocket(s);
+
+
+    SOCKADDR_IN dest{ 0 };
+    char buf[PACKET_MAX_SIZE];
+    int sock;
+    if ((sock = init_sock_ip(buf, dest)) == -1)
+        "C LA MERDE";
+
+    size_t size = craft_packet(buf);
+    printf("\nSending packet...\n");
+    send_packet(sock, buf, size, dest);
+    std::cout << "done!" << std::endl;
+    closesocket(sock);
     WSACleanup();
 
     return 0;
