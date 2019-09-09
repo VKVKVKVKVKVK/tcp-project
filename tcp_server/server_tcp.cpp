@@ -1,81 +1,101 @@
-#ifndef UNICODE
-#define UNICODE
-#endif
+//#include <winsock.h>
+#include <iostream>
+#include <WinSock2.h>
+//#include <stdint.h>
+#include <ws2tcpip.h>
+#include <conio.h>
 
-#define WIN32_LEAN_AND_MEAN
 
-#include <winsock2.h>
-#include <Ws2tcpip.h>
-#include <stdio.h>
-
-// Link with ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
+
+#define PACKET_MAX_SIZE 1523 //FIXME
+
+using namespace std;
+
+typedef struct ip_hdr
+{
+    unsigned char ip_header_len : 4; // 4-bit header length (in 32-bit words) normally=5 (Means 20 Bytes may be 24 also)
+    unsigned char ip_version : 4; // 4-bit IPv4 version
+    unsigned char ip_tos; // IP type of service
+    unsigned short ip_total_length; // Total length
+    unsigned short ip_id; // Unique identifier
+    unsigned char ip_frag_offset : 5; // Fragment offset field
+    unsigned char ip_more_fragment : 1;
+    unsigned char ip_dont_fragment : 1;
+    unsigned char ip_reserved_zero : 1;
+    unsigned char ip_frag_offset1; //fragment offset
+    unsigned char ip_ttl; // Time to live
+    unsigned char ip_protocol; // Protocol(TCP,UDP etc)
+    unsigned short ip_checksum; // IP checksum
+    unsigned int ip_srcaddr; // Source address
+    unsigned int ip_destaddr; // Source address
+} IPV4_HDR, *PIPV4_HDR, FAR * LPIPV4_HDR;
+
+typedef struct tcp_header
+{
+    unsigned short source_port; // source port
+    unsigned short dest_port; // destination port
+    unsigned int sequence; // sequence number - 32 bits
+    unsigned int acknowledge; // acknowledgement number - 32 bits
+    unsigned char ns : 1; //Nonce Sum Flag Added in RFC 3540.
+    unsigned char reserved_part1 : 3; //according to rfc
+    unsigned char data_offset : 4; /*The number of 32-bit words in the TCP header.
+    This indicates where the data begins.
+    The length of the TCP header is always a multiple
+    of 32 bits.*/
+    unsigned char fin : 1; //Finish Flag
+    unsigned char syn : 1; //Synchronise Flag
+    unsigned char rst : 1; //Reset Flag
+    unsigned char psh : 1; //Push Flag
+    unsigned char ack : 1; //Acknowledgement Flag
+    unsigned char urg : 1; //Urgent Flag
+    unsigned char ecn : 1; //ECN-Echo Flag
+    unsigned char cwr : 1; //Congestion Window Reduced Flag
+
+    ////////////////////////////////
+
+    unsigned short window; // window
+    unsigned short checksum; // checksum
+    unsigned short urgent_pointer; // urgent pointer
+} TCP_HDR, *PTCP_HDR, FAR * LPTCP_HDR, TCPHeader, TCP_HEADER;
 
 int main()
 {
-
-    int iResult = 0;
-
-    WSADATA wsaData;
-
-    SOCKET RecvSocket;
-    sockaddr_in RecvAddr;
-
-    unsigned short Port = 27015;
-
-    char RecvBuf[1024];
-    int BufLen = 1024;
-
-    sockaddr_in SenderAddr;
-    int SenderAddrSize = sizeof (SenderAddr);
-
-    //-----------------------------------------------
-    // Initialize Winsock
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != NO_ERROR) {
-        wprintf(L"WSAStartup failed with error %d\n", iResult);
-        return 1;
+    WSADATA WSAData;
+    SOCKET sock;
+    char buff[PACKET_MAX_SIZE] = { 0 };
+    WSADATA wsock;
+    if (WSAStartup(MAKEWORD(2, 2), &wsock) != 0)
+    {
+        fprintf(stderr, "WSAStartup() failed");
+        exit(EXIT_FAILURE);
     }
-    //-----------------------------------------------
-    // Create a receiver socket to receive datagrams
-    RecvSocket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
-    if (RecvSocket == INVALID_SOCKET) {
-        wprintf(L"socket failed with error %d\n", WSAGetLastError());
-        return 1;
-    }
-    //-----------------------------------------------
-    // Bind the socket to any address and the specified port.
-    RecvAddr.sin_family = AF_INET;
-    RecvAddr.sin_port = htons(Port);
-    RecvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    sockaddr_in dest{ 0 };
+   // InetPtonW(AF_INET, L"0.0.0.0", &dest.sin_addr.s_addr);
+    dest.sin_addr.s_addr=inet_addr("0.0.0.0");
+    dest.sin_family = AF_INET;
+    dest.sin_port = 0;
+    bind(sock, (sockaddr*)&dest, sizeof(dest));
+    cout << "sock: " << sock << endl;
+    //system("PAUSE");
+    for (;!_kbhit();)
+    {
+        int bytesIn = recv(sock, buff, 1000, 0);
+        if (bytesIn == SOCKET_ERROR)
+        {
+            cout << "Error Receving from Server" << WSAGetLastError() << endl;
+        }
+        else
+        {
+            cout << "MESSAGE RECV from Server " << " : " << bytesIn << endl;
+            tcp_header* tcph = (tcp_header*)(buff + sizeof(ip_hdr));
+            cout << "ACK: "  << (int)tcph->ack << endl;
 
-    iResult = bind(RecvSocket, (SOCKADDR *) & RecvAddr, sizeof (RecvAddr));
-    if (iResult != 0) {
-        wprintf(L"bind failed with error %d\n", WSAGetLastError());
-        return 1;
+            //cout << buff + sizeof(ip_hdr) << endl;
+            cout << buff + sizeof(ip_hdr) + sizeof(tcp_header) << endl;
+        }
     }
-    //-----------------------------------------------
-    // Call the recvfrom function to receive datagrams
-    // on the bound socket.
-    wprintf(L"Receiving datagrams...\n");
-    iResult = recvfrom(RecvSocket,
-                       RecvBuf, BufLen, 0, (SOCKADDR *) & SenderAddr, &SenderAddrSize);
-    if (iResult == SOCKET_ERROR) {
-        wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
-    }
-
-    //-----------------------------------------------
-    // Close the socket when finished receiving datagrams
-    wprintf(L"Finished receiving. Closing socket.\n");
-    iResult = closesocket(RecvSocket);
-    if (iResult == SOCKET_ERROR) {
-        wprintf(L"closesocket failed with error %d\n", WSAGetLastError());
-        return 1;
-    }
-
-    //-----------------------------------------------
-    // Clean up and exit.
-    wprintf(L"Exiting.\n");
+    closesocket(sock);
     WSACleanup();
-    return 0;
 }
