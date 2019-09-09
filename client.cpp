@@ -46,7 +46,7 @@ int main(int argc, char const *argv[])
 
   memset(buffer, 0, PCKT_LEN);
 
-  // create a raw socket with UDP protocol
+  // create a raw socket with TCP protocol
   sd = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
   if (sd < 0) {
     perror("socket() error");
