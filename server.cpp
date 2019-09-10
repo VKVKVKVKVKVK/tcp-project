@@ -17,6 +17,7 @@ int main(int argc, char const *argv[])
 
     // Allocate string buffer to hold incoming packet data
     unsigned char buffer[65536];
+    memset(buffer, 0, 65536);
     // Open the raw socket
     int sock = socket (PF_INET, SOCK_RAW, IPPROTO_TCP);
     if(sock == -1)
@@ -33,29 +34,29 @@ int main(int argc, char const *argv[])
         return 1;
       }
 
-      struct iphdr *ip_packet = (struct iphdr *)buffer;
-      struct tcphdr *tcp_packet = (struct tcphdr *)(buffer + sizeof(struct iphdr));
+      struct iphdr *ip = (struct iphdr *)buffer;
+      struct tcphdr *tcp = (struct tcphdr *)(buffer + sizeof(struct iphdr));
       
       //check if dest port is equal to one of server
-      if (ntohs(tcp_packet->dest) != port)
+      if (ntohs(tcp->dest) != port)
       {
 	printf("Not the correct port!\n");
-	ip_packet = NULL;
-	tcp_packet = NULL;
+	ip = NULL;
+	tcp = NULL;
 	continue;
       }
 
       memset(&source_socket_address, 0, sizeof(source_socket_address));
-      source_socket_address.sin_addr.s_addr = ip_packet->saddr;
+      source_socket_address.sin_addr.s_addr = ip->saddr;
       memset(&dest_socket_address, 0, sizeof(dest_socket_address));
-      dest_socket_address.sin_addr.s_addr = ip_packet->daddr;
+      dest_socket_address.sin_addr.s_addr = ip->daddr;
 
       printf("Incoming Packet: \n");
-      printf("Packet Size (bytes): %d\n",ntohs(ip_packet->tot_len));
+      printf("Packet Size (bytes): %d\n",ntohs(ip->tot_len));
       printf("Source Address: %s\n", (char *)inet_ntoa(source_socket_address.sin_addr));
       printf("Destination Address: %s\n", (char *)inet_ntoa(dest_socket_address.sin_addr));
-      printf("Source Port: %d\n", ntohs(tcp_packet->source));
-      printf("Destination Port: %d\n", ntohs(tcp_packet->dest));
+      printf("Source Port: %d\n", ntohs(tcp->source));
+      printf("Destination Port: %d\n", ntohs(tcp->dest));
     }
 
     return 0;
