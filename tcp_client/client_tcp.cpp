@@ -84,7 +84,7 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
 
 size_t craft_packet(char* buf)
 {
-    std::string payload("salut");
+    std::string payload("Hello Mamene");
     IPV4_HDR* v4hdr = (IPV4_HDR*)buf;
     v4hdr->ip_total_length = htons(sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size());
     TCP_HDR *tcphdr = NULL;

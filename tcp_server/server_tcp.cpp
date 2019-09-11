@@ -79,13 +79,12 @@ void print_segment(tcp_header* tcph, char* buff){
     cout << "Checksum: "  << tcph->checksum << endl;
     cout << "Urgent Pointer: "  << tcph->urgent_pointer << endl;
 
-    // cout << buff + sizeof(ip_hdr) << endl;
-    cout << "Payload: " << buff + sizeof(ip_hdr) + sizeof(tcp_header) << endl;
+
 
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     int red = 12;
     int green = 10;
-    int black = 16;
+    int black = 0;
     SetConsoleTextAttribute(hConsole, green);
     cout << " 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 " << endl;
     cout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
@@ -172,6 +171,11 @@ void print_segment(tcp_header* tcph, char* buff){
     cout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
 
     SetConsoleTextAttribute(hConsole, black);
+
+    // cout << buff + sizeof(ip_hdr) << endl;
+    cout << "Payload ===>  " ;
+    SetConsoleTextAttribute(hConsole, 13);
+    cout << buff + sizeof(ip_hdr) + sizeof(tcp_header) << endl;
 }
 
 int main()
