@@ -78,6 +78,7 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
     v4hdr->ip_destaddr = inet_addr(inet_ntoa(dest.sin_addr));
     v4hdr->ip_checksum = 0;
 
+
     return s;
 }
 
@@ -89,8 +90,8 @@ size_t craft_packet(char* buf)
     TCP_HDR *tcphdr = NULL;
     tcphdr = (TCP_HDR *)&buf[sizeof(IPV4_HDR)]; //get the pointer to the tcp header in the packet
     //tcp header
-    tcphdr->source_port = htons(1234);
-    tcphdr->dest_port = htons(50000);
+    tcphdr->source_port = 1234; //FIXME why htons ?
+    tcphdr->dest_port = 50000; //FIXME why htons ?
 
     tcphdr->cwr = 0;
     tcphdr->ecn = 1;
@@ -102,10 +103,22 @@ size_t craft_packet(char* buf)
     tcphdr->fin = 0;
     tcphdr->ns = 1;
 
+    tcphdr->sequence = 123;
+    tcphdr->acknowledge = 0;
+    tcphdr->reserved_part1 = 0;
+    tcphdr->data_offset = 0;
+    tcphdr->window = 0;
+
+    tcphdr->urgent_pointer = 0;
+
     tcphdr->checksum = 0; //FIXME
 
     char* data = &buf[sizeof(IPV4_HDR) + sizeof(TCP_HDR)];
     memcpy(data, payload.c_str(), payload.size());
+
+    cout << "dest port: "<<tcphdr->dest_port << endl;
+    cout << "source port: "<<tcphdr->source_port << endl;
+
     return sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size();
 }
 
@@ -237,11 +250,11 @@ void ouverture_connexion(){
 
 int main()
 {
-
+    /*
     int choix = menu_start();
     switch(choix) {
         case 1 :
-            ouverture_connexion();
+          //  ouverture_connexion();
             break;
         case 2 :
             break;
@@ -250,7 +263,7 @@ int main()
         case 4 :
             break;
     }
-
+*/
 
 
     SOCKADDR_IN dest{ 0 };
