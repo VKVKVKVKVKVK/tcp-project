@@ -2,66 +2,142 @@
 
 using namespace std;
 
+    int state = 0;
+struct flags {
+    bool syn = 0;
+    bool ack = 0;
+    bool fin = 0;
+}
+
+
 int main(void){
    cout << "Hello World" << endl;
    return 0;
 }
 
-void automate(void){
-    int state = 0;
+flas automate(flags f){
+flags ret;
+
     //CLOSED
     if (state == 0)
     {
         cout << "CLOSED" << endl;
+        state = 1; //ouverture passive
     }
+
     // LISTEN
-    if (state == 1)
+    else if (state == 1)
     {
         cout << "LISTEN" << endl;
+        if (f.syn)
+        {
+            state = 2;
+            ret.syn =true;
+            ret.ack =true;
+        }
     }
+
     //SYN_RECVD
-    if (state == 2)
+    else if (state == 2)
     {
         cout << "SYN_RECVD" << endl;
+        if (f.ack)
+        {
+            state = 4;
+        }
     }
+
     //SYN_SENT
-    if (state == 3)
+    else if (state == 3)
     {
         cout << "SYN_SENT" << endl;
+        if (f.syn && f.ack)
+        {
+            state = 4;
+            ret.ack = true
+        }
+        if (f.syn)
+        {
+            state = 2;
+            ret.syn = true;
+            ret.ack = true;
+        }
+
     }
+
     //ESTABLISHED
-    if (state == 4)
+    else if (state == 4)
     {
         cout << "ESTABLISHED" << endl;
+        if (f.fin)
+        {
+            state = 6;
+            ret.ack = true;
+        }   
     }
+
     //FIN_WAIT_1
-    if (state == 5)
+    else if (state == 5)
     {
         cout << "FIN_WAIT_1" << endl;
+        if (f.fin && f.ack)
+        {
+            state = 10;
+            ret.ack = true;
+        }
+        else if (f.fin)
+        {
+            state = 7;
+            ret.ack = true;
+        }
+        else if (f.ack)
+        {
+            state = 8;
+        }
     }
+
     //CLOSE_WAIT
-    if (state == 6)
+    else if (state == 6)
     {
         cout << "CLOSE_WAIT" << endl;
     }
+
     //CLOSING
-    if (state == 7)
+    else if (state == 7)
     {
         cout << "CLOSING" << endl;
+        if (f.ack)
+        {
+            state = 10;
+        }
     }
+
     //FIN_WAIT_2
-    if (state == 8)
+    else if (state == 8)
     {
         cout << "FIN_WAIT_2" << endl;
+        if (f.fin)
+        {
+            ret.ack = true;
+            state = 10;
+        }
     }
+
     //LAST_ACK
-    if (state == 9)
+    else if (state == 9)
     {
         cout << "LAST_ACK" << endl;
+        if (f.ack)
+        {
+            state = 0;
+        }
     }
+
     //TIMED_WAIT
-    if (state == 10)
+    else if (state == 10)
     {
         cout << "TIMED_WAIT" << endl;
     }
+
+    return ret;
 }
