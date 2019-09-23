@@ -9,7 +9,7 @@ struct flags {
     bool fin = 0;
 }
 
-flas automate(flags f, bool client){
+flas automate(bool syn, bool ack, bool fin, bool client){
 flags ret;
 
     //CLOSED
@@ -23,7 +23,7 @@ flags ret;
     else if (state == 1)
     {
         cout << "LISTEN" << endl;
-        if (f.syn)
+        if (syn)
         {
             state = 2;
             ret.syn =true;
@@ -40,7 +40,7 @@ flags ret;
     else if (state == 2)
     {
         cout << "SYN_RECVD" << endl;
-        if (f.ack)
+        if (ack)
         {
             state = 4;
         }
@@ -50,12 +50,12 @@ flags ret;
     else if (state == 3)
     {
         cout << "SYN_SENT" << endl;
-        if (f.syn && f.ack)
+        if (syn && ack)
         {
             state = 4;
             ret.ack = true
         }
-        else if (f.syn)
+        else if (syn)
         {
             state = 2;
             ret.syn = true;
@@ -68,7 +68,7 @@ flags ret;
     else if (state == 4)
     {
         cout << "ESTABLISHED" << endl;
-        if (f.fin)
+        if (fin)
         {
             state = 6;
             ret.ack = true;
@@ -79,17 +79,17 @@ flags ret;
     else if (state == 5)
     {
         cout << "FIN_WAIT_1" << endl;
-        if (f.fin && f.ack)
+        if (fin && ack)
         {
             state = 10;
             ret.ack = true;
         }
-        else if (f.fin)
+        else if (fin)
         {
             state = 7;
             ret.ack = true;
         }
-        else if (f.ack)
+        else if (ack)
         {
             state = 8;
         }
@@ -99,13 +99,14 @@ flags ret;
     else if (state == 6)
     {
         cout << "CLOSE_WAIT" << endl;
+        ret.fin = true;
     }
 
     //CLOSING
     else if (state == 7)
     {
         cout << "CLOSING" << endl;
-        if (f.ack)
+        if (ack)
         {
             state = 10;
         }
@@ -115,7 +116,7 @@ flags ret;
     else if (state == 8)
     {
         cout << "FIN_WAIT_2" << endl;
-        if (f.fin)
+        if (fin)
         {
             ret.ack = true;
             state = 10;
@@ -126,7 +127,7 @@ flags ret;
     else if (state == 9)
     {
         cout << "LAST_ACK" << endl;
-        if (f.ack)
+        if (ack)
         {
             state = 0;
         }
