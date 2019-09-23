@@ -37,7 +37,6 @@ int main(int argc, char const *argv[])
 
   int sd;
   char buffer[PCKT_LEN];
-  //struct iphdr *ip = (struct iphdr *) buffer;
   struct tcphdr *tcp = (struct tcphdr *)buffer;
 
   struct sockaddr_in sin;
@@ -63,8 +62,9 @@ int main(int argc, char const *argv[])
   // destination port number
   tcp->dest = htons(dst_port);
   tcp->doff = 5;
-
-  // calculate the checksum for integrity
+  tcp->syn = 1;
+  tcp->seq = 456;
+  tcp->window = 9999;
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
   
   if (sendto(sd, buffer, sizeof(struct tcphdr), 0,

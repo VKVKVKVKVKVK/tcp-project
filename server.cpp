@@ -57,6 +57,7 @@ int main(int argc, char const *argv[])
       printf("Destination Address: %s\n", (char *)inet_ntoa(dest_socket_address.sin_addr));
       printf("Source Port: %d\n", ntohs(tcp->source));
       printf("Destination Port: %d\n", ntohs(tcp->dest));
+      printf("SEQ: %d\n", tcp->seq);
     }
 
     return 0;
