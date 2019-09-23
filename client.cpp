@@ -57,14 +57,22 @@ int main(int argc, char const *argv[])
   sin.sin_port = htons(dst_port);
   sin.sin_addr.s_addr = dst_addr;
 
-  // fabricate the TCP header
   tcp->source = htons(src_port);
-  // destination port number
   tcp->dest = htons(dst_port);
+  tcp->ack_seq = 0;
+  tcp->res1 = 0;
+  tcp->fin = 0;
+  tcp->rst = 0;
+  tcp->psh = 0;
+  tcp->ack = 0;
+  tcp->urg = 1;
+  tcp->ece = 0;
+  tcp->cwr = 0;
   tcp->doff = 5;
   tcp->syn = 1;
   tcp->seq = 456;
-  tcp->window = 9999;
+  tcp->urg_ptr = 0;
+  tcp->window = 1000;
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
   
   if (sendto(sd, buffer, sizeof(struct tcphdr), 0,

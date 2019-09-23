@@ -56,8 +56,17 @@ int main(int argc, char const *argv[])
       printf("Source Address: %s\n", (char *)inet_ntoa(source_socket_address.sin_addr));
       printf("Destination Address: %s\n", (char *)inet_ntoa(dest_socket_address.sin_addr));
       printf("Source Port: %d\n", ntohs(tcp->source));
-      printf("Destination Port: %d\n", ntohs(tcp->dest));
-      printf("SEQ: %d\n", tcp->seq);
+      printf("ack_seq: %d\n", tcp->ack_seq);
+      printf("res1: %d\n", tcp->res1);
+      printf("fin: %d\n", tcp->fin);
+      printf("Reset: %d\n", tcp->rst);
+      printf("Push: %d\n", tcp->psh);
+      printf("Seq: %d\n", tcp->seq);
+      printf("ack: %d\n", tcp->ack);
+      printf("urg: %d\n", tcp->urg);
+      printf("ece: %d\n", tcp->ece);
+      printf("Window: %d\n", tcp->window);
+
     }
 
     return 0;
