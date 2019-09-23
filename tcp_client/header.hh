@@ -12,6 +12,18 @@
 
 #define PACKET_MAX_SIZE 1523 //FIXME
 
+struct flags {
+    bool syn;
+    bool ack;
+    bool fin;
+
+    flags()
+    : syn(false)
+    , ack(false)
+    , fin(false)
+    {};
+};
+
 typedef struct ip_hdr
 {
     unsigned char ip_header_len : 4; // 4-bit header length (in 32-bit words) normally=5 (Means 20 Bytes may be 24 also)

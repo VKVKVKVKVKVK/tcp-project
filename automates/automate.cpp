@@ -1,16 +1,13 @@
 #include <iostream>
 
+#include "../tcp_client/header.hh"
+
 using namespace std;
 
-    int state = 0;
-struct flags {
-    bool syn = 0;
-    bool ack = 0;
-    bool fin = 0;
-}
+int state = 0;
 
-flas automate(bool syn, bool ack, bool fin, bool client){
-flags ret;
+flas automate(bool syn, bool ack, bool fin, bool client) {
+    flags ret;
 
     //CLOSED
     if (state == 0)
