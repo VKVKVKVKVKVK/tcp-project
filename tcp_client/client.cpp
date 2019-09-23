@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -9,6 +10,8 @@
 #include <linux/tcp.h>
 
 #define PCKT_LEN 8192
+
+using namespace std;
 
 unsigned short csum(unsigned short *buf, int nwords)
 {
@@ -59,21 +62,27 @@ int main(int argc, char const *argv[])
 
   tcp->source = htons(src_port);
   tcp->dest = htons(dst_port);
-  tcp->ack_seq = 0;
-  tcp->res1 = 0;
-  tcp->fin = 0;
-  tcp->rst = 0;
-  tcp->psh = 0;
-  tcp->ack = 0;
-  tcp->urg = 1;
-  tcp->ece = 0;
-  tcp->cwr = 0;
-  tcp->doff = 5;
-  tcp->syn = 1;
-  tcp->seq = 456;
-  tcp->urg_ptr = 0;
-  tcp->window = 1000;
+
+  tcp->ack_seq = 0;//
+  tcp->res1 = 0; //
+  tcp->fin = 0; //
+  tcp->rst = 0; //
+  tcp->psh = 0; //
+  tcp->ack = 0; //
+  tcp->urg = 1; //
+  tcp->ece = 0; //
+  tcp->cwr = 0; //
+  tcp->doff = 5; //
+  tcp->syn = 1; //
+  tcp->seq = 456; //
+  tcp->urg_ptr = 0; //
+  tcp->window = 1000; //
+
+
+
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
+
+
   
   if (sendto(sd, buffer, sizeof(struct tcphdr), 0,
              (struct sockaddr *)&sin, sizeof(sin)) < 0)
@@ -86,3 +95,90 @@ int main(int argc, char const *argv[])
   close(sd);
   return 0;
 }
+
+/*
+void ouverture_connexion(tcphdr *tcp){
+
+
+    system("CLS");
+    cout << "###############################################" << endl;
+    cout << "#                                             #" << endl;
+    cout << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
+    cout << "#  saisir les parametres:                     #" << endl;
+    cout << "#                                             #" << endl;
+    cout << "###############################################\n" << endl;
+
+
+
+    cout << "#  Acknowledge number???                            #" << endl;
+    cin >> tcp->ack_seq;
+
+    cout << "#  Reserved Part ???                          #" << endl;
+    unsigned char reserved_part;
+    cin >> reserved_part;
+    tcp->res1 = reserved_part;
+
+    cout << "#  FIN ???                                    #" << endl;
+    unsigned char fin;
+    cin >> fin;
+    tcp->fin = fin;
+
+    cout << "#  RST ???                                    #" << endl;
+    unsigned char rst;
+    cin >> rst;
+    tcp->rst = rst;
+
+    cout << "#  PSH ???                                    #" << endl;
+    unsigned char psh;
+    cin >> psh;
+    tcp->psh = psh;
+
+    cout << "#  ACK???                                     #" << endl;
+    unsigned char ack;
+    cin >> ack;
+    tcp->ack = ack;
+
+    cout << "#  URG ???                                    #" << endl;
+    unsigned char urg;
+    cin >> urg;
+    tcp->urg = urg;
+
+    cout << "#  ECN-Echo Flag ???                          #" << endl;
+    unsigned char ecn;
+    cin >> ecn;
+    tcp->ece = ecn;
+
+    cout << "#  Congestion Window Reduced ???              #" << endl;
+    unsigned char cwr;
+    cin >> cwr;
+    tcp->cwr = cwr;
+
+    cout << "#  Data offset ???                            #" << endl;
+    unsigned char data_offset;
+    cin >> data_offset;
+    tcp->doff = data_offset;
+
+    cout << "#  SYN ???                                    #" << endl;
+    unsigned char syn;
+    cin >> syn;
+    tcp->syn = syn;
+
+
+    cout << "#  Sequence: ???                              #" << endl;
+    cin >> tcp->seq;
+
+
+    cout << "#  Urgent Pointer : ???                       #" << endl;
+    cin >> tcp->urg_ptr;
+
+
+    cout << "#  Window: ???                                #" << endl;
+    cin >> tcp->window;
+
+    cout << "###############################################" << endl;
+
+
+
+    system("CLS");
+}
+*/
