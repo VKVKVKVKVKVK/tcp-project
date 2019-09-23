@@ -38,6 +38,7 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
     printf("Raw TCP Socket Created successfully.");
     ////////////////////////////////////////////////
 
+
     //Put Socket in RAW Mode.
     printf("\nSetting the socket in RAW mode...");
     if (setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *)&optval, sizeof(optval)) == SOCKET_ERROR)
@@ -57,10 +58,12 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
     }
     dest.sin_family = AF_INET;
     //dest.sin_port = htons(50000); //your destination port
-    memcpy(&dest.sin_addr.s_addr, server->h_addr, server->h_length);
+    //dest.sin_addr.s_addr = inet_addr(host.c_str());
+   // memcpy(&dest.sin_addr.s_addr, server->h_addr, server->h_length);
     printf("Resolved.");
     /////////////////////////////////////////////////
 
+    /*
     v4hdr = (IPV4_HDR *)buf; //lets point to the ip header portion
     v4hdr->ip_version = 4;
     v4hdr->ip_header_len = 5;
@@ -78,13 +81,14 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
     v4hdr->ip_destaddr = inet_addr(inet_ntoa(dest.sin_addr));
     v4hdr->ip_checksum = 0;
 
-
+*/
     return s;
 }
 
 
 void ouverture_connexion(TCP_HDR *tcp){
 
+    /*
     system("CLS");
     cout << "###############################################" << endl;
     cout << "#                                             #" << endl;
@@ -178,7 +182,7 @@ void ouverture_connexion(TCP_HDR *tcp){
     cout << "###############################################" << endl;
 
 
-
+*/
     system("CLS");
 }
 
@@ -190,11 +194,11 @@ size_t craft_packet(char* buf)
     TCP_HDR *tcphdr = NULL;
     tcphdr = (TCP_HDR *)&buf[sizeof(IPV4_HDR)]; //get the pointer to the tcp header in the packet
 
-    ouverture_connexion(tcphdr);
-    /*
+   // ouverture_connexion(tcphdr);
+
     //tcp header
-    tcphdr->source_port = 1234; //FIXME why htons ?
-    tcphdr->dest_port = 50000; //FIXME why htons ?
+    tcphdr->source_port = htons(1234); //FIXME why htons ?
+    tcphdr->dest_port = htons(50000); //FIXME why htons ?
     tcphdr->cwr = 0;
     tcphdr->ecn = 1;
     tcphdr->urg = 0;
@@ -212,7 +216,7 @@ size_t craft_packet(char* buf)
     tcphdr->urgent_pointer = 0;
     tcphdr->checksum = 0; //FIXME
 
-     */
+
 
     char* data = &buf[sizeof(IPV4_HDR) + sizeof(TCP_HDR)];
     memcpy(data, payload.c_str(), payload.size());
@@ -259,6 +263,7 @@ int menu_start() {
 int main()
 {
 
+/*
     int choix = menu_start();
     switch(choix) {
         case 1 :
@@ -271,7 +276,7 @@ int main()
         case 4 :
             break;
     }
-
+*/
 
 
     SOCKADDR_IN dest{ 0 };

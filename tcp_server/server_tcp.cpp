@@ -91,11 +91,11 @@ void print_segment(tcp_header* tcph, char* buff){
     cout << "|        Source Port            |        Destination Port       |" << endl;
     cout << "|        ";
     SetConsoleTextAttribute(hConsole, red);
-    cout << tcph->source_port;
+    cout << ntohs(tcph->source_port);
     SetConsoleTextAttribute(hConsole, green);
     cout <<"                   |        ";
     SetConsoleTextAttribute(hConsole, red);
-    cout<< tcph->dest_port ;
+    cout<< ntohs(tcph->dest_port);
     SetConsoleTextAttribute(hConsole, green);
     cout<< "                  |" << endl;
     cout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
