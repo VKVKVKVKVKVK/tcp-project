@@ -8,6 +8,8 @@
 #include<sys/socket.h>
 #include<arpa/inet.h>
 
+#include "../automates/automate.cpp"
+
 using namespace std;
 void print_segment(tcphdr* tcph, unsigned char* buff);
 
@@ -33,10 +35,16 @@ namespace Color {
     };
 }
 
+
+
+
+
 int main(int argc, char const *argv[])
 {
     u_int16_t port = atoi(argv[1]);
-    
+   
+    int state = 1; //LISTEN 
+
     // Structs that contain source IP addresses
     struct sockaddr_in source_socket_address, dest_socket_address;
 
@@ -44,6 +52,7 @@ int main(int argc, char const *argv[])
 
     // Allocate string buffer to hold incoming packet data
     unsigned char buffer[65536];
+    struct sockaddr_in sin;
     memset(buffer, 0, 65536);
     // Open the raw socket
     int sock = socket (PF_INET, SOCK_RAW, IPPROTO_TCP);
@@ -53,8 +62,8 @@ int main(int argc, char const *argv[])
         perror("Failed to create socket");
         exit(1);
     }
-    while(1) {
-      // recvfrom is used to read data from a socket
+    while(1)
+    {
       packet_size = recvfrom(sock , buffer , 65536 , 0 , NULL, NULL);
       if (packet_size == -1) {
         printf("Failed to get packets\n");
@@ -78,24 +87,11 @@ int main(int argc, char const *argv[])
       memset(&dest_socket_address, 0, sizeof(dest_socket_address));
       dest_socket_address.sin_addr.s_addr = ip->daddr;
 
-      printf("Incoming Packet: \n");
-      printf("Packet Size (bytes): %d\n",ntohs(ip->tot_len));
-      printf("Source Address: %s\n", (char *)inet_ntoa(source_socket_address.sin_addr));
-      printf("Destination Address: %s\n", (char *)inet_ntoa(dest_socket_address.sin_addr));
-      printf("Source Port: %d\n", ntohs(tcp->source));
-      printf("ack_seq: %d\n", tcp->ack_seq);
-      printf("res1: %d\n", tcp->res1);
-      printf("fin: %d\n", tcp->fin);
-      printf("Reset: %d\n", tcp->rst);
-      printf("Push: %d\n", tcp->psh);
-      printf("Seq: %d\n", tcp->seq);
-      printf("ack: %d\n", tcp->ack);
-      printf("urg: %d\n", tcp->urg);
-      printf("ece: %d\n", tcp->ece);
-      printf("Window: %d\n", tcp->window);
-
       print_segment(tcp, buffer);
+      
 
+      struct flags flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
+      
     }
 
     return 0;

@@ -1,12 +1,19 @@
 #include <iostream>
 
-#include "../tcp_client/header.hh"
-
 using namespace std;
 
-int state = 0;
+struct flags {
+    bool syn;
+    bool ack;
+    bool fin;
 
-flas automate(bool syn, bool ack, bool fin, bool client) {
+    flags()
+    : syn(false), ack(false), fin(false)
+    {};
+};
+
+
+flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     flags ret;
 
     //CLOSED
@@ -50,7 +57,7 @@ flas automate(bool syn, bool ack, bool fin, bool client) {
         if (syn && ack)
         {
             state = 4;
-            ret.ack = true
+            ret.ack = true;
         }
         else if (syn)
         {
