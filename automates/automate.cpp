@@ -9,13 +9,7 @@ struct flags {
     bool fin = 0;
 }
 
-
-int main(void){
-   cout << "Hello World" << endl;
-   return 0;
-}
-
-flas automate(flags f){
+flas automate(flags f, bool client){
 flags ret;
 
     //CLOSED
@@ -34,6 +28,11 @@ flags ret;
             state = 2;
             ret.syn =true;
             ret.ack =true;
+        }
+
+        else if (client)
+        {
+            state = 2;
         }
     }
 
@@ -56,7 +55,7 @@ flags ret;
             state = 4;
             ret.ack = true
         }
-        if (f.syn)
+        else if (f.syn)
         {
             state = 2;
             ret.syn = true;
@@ -137,6 +136,7 @@ flags ret;
     else if (state == 10)
     {
         cout << "TIMED_WAIT" << endl;
+        state = 0;
     }
 
     return ret;
