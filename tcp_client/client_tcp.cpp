@@ -82,6 +82,106 @@ int init_sock_ip(char* buf, SOCKADDR_IN& dest)
     return s;
 }
 
+
+void ouverture_connexion(TCP_HDR *tcp){
+
+    system("CLS");
+    cout << "###############################################" << endl;
+    cout << "#                                             #" << endl;
+    cout << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
+    cout << "#  saisir les parametres:                     #" << endl;
+    cout << "#                                             #" << endl;
+    cout << "###############################################\n" << endl;
+
+    cout << "#  Port Source: ???                           #" << endl;
+    string s_port;
+    cin >> s_port;
+    tcp->source_port = (unsigned short) stoi(s_port);
+
+
+    cout << "#  Port Dest: ???                             #" << endl;
+    string d_port;
+    cin >> d_port;
+    tcp->dest_port = (unsigned short) stoi(d_port);
+
+    cout << "#  Sequence: ???                              #" << endl;
+    cin >> tcp->sequence;
+
+    cout << "#  Acknowledge ???                            #" << endl;
+    cin >> tcp->acknowledge;
+
+    cout << "#  Nonce Sum Flag: ???                        #" << endl;
+    unsigned char ns;
+    cin >> ns;
+    tcp->ns = ns;
+
+    cout << "#  Reserved Part ???                          #" << endl;
+    unsigned char reserved_part;
+    cin >> reserved_part;
+    tcp->reserved_part1 = reserved_part;
+
+    cout << "#  Data offset ???                            #" << endl;
+    unsigned char data_offset;
+    cin >> data_offset;
+    tcp->data_offset = data_offset;
+
+    cout << "#  FIN ???                                    #" << endl;
+    unsigned char fin;
+    cin >> fin;
+    tcp->fin = fin;
+
+    cout << "#  SYN ???                                    #" << endl;
+    unsigned char syn;
+    cin >> syn;
+    tcp->syn = syn;
+
+    cout << "#  RST ???                                    #" << endl;
+    unsigned char rst;
+    cin >> rst;
+    tcp->rst = rst;
+
+    cout << "#  PSH ???                                    #" << endl;
+    unsigned char psh;
+    cin >> psh;
+    tcp->psh = psh;
+
+    cout << "#  ACK???                                     #" << endl;
+    unsigned char ack;
+    cin >> ack;
+    tcp->ack = ack;
+
+    cout << "#  URG ???                                    #" << endl;
+    unsigned char urg;
+    cin >> urg;
+    tcp->urg = urg;
+
+    cout << "#  ECN-Echo Flag ???                          #" << endl;
+    unsigned char ecn;
+    cin >> ecn;
+    tcp->ecn = ecn;
+
+    cout << "#  Congestion Window Reduced ???              #" << endl;
+    unsigned char cwr;
+    cin >> cwr;
+    tcp->cwr = cwr;
+
+    cout << "#  Window: ???                                #" << endl;
+    cin >> tcp->window;
+
+    cout << "#  Checksum: ???                              #" << endl;
+    cin >> tcp->checksum;
+
+    cout << "#  Urgent Pointer : ???                       #" << endl;
+    cin >> tcp->urgent_pointer;
+
+
+    cout << "###############################################" << endl;
+
+
+
+    system("CLS");
+}
+
 size_t craft_packet(char* buf)
 {
     std::string payload("Hello Mamene");
@@ -89,10 +189,12 @@ size_t craft_packet(char* buf)
     v4hdr->ip_total_length = htons(sizeof(IPV4_HDR) + sizeof(TCP_HDR) + payload.size());
     TCP_HDR *tcphdr = NULL;
     tcphdr = (TCP_HDR *)&buf[sizeof(IPV4_HDR)]; //get the pointer to the tcp header in the packet
+
+    ouverture_connexion(tcphdr);
+    /*
     //tcp header
     tcphdr->source_port = 1234; //FIXME why htons ?
     tcphdr->dest_port = 50000; //FIXME why htons ?
-
     tcphdr->cwr = 0;
     tcphdr->ecn = 1;
     tcphdr->urg = 0;
@@ -102,16 +204,15 @@ size_t craft_packet(char* buf)
     tcphdr->syn = 0;
     tcphdr->fin = 0;
     tcphdr->ns = 1;
-
     tcphdr->sequence = 123;
     tcphdr->acknowledge = 0;
     tcphdr->reserved_part1 = 0;
     tcphdr->data_offset = 0;
     tcphdr->window = 0;
-
     tcphdr->urgent_pointer = 0;
-
     tcphdr->checksum = 0; //FIXME
+
+     */
 
     char* data = &buf[sizeof(IPV4_HDR) + sizeof(TCP_HDR)];
     memcpy(data, payload.c_str(), payload.size());
@@ -153,108 +254,15 @@ int menu_start() {
     return choix;
 }
 
-void ouverture_connexion(){
 
-    tcp_header tcp{0};
-    system("CLS");
-    cout << "###############################################" << endl;
-    cout << "#                                             #" << endl;
-    cout << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
-    cout << "#  saisir les parametres:                     #" << endl;
-    cout << "#                                             #" << endl;
-    cout << "###############################################\n" << endl;
-
-    cout << "#  Port Source: ???                           #" << endl;
-    cin >> tcp.source_port;
-
-    cout << "#  Port Dest: ???                             #" << endl;
-    cin >> tcp.dest_port;
-
-    cout << "#  Sequence: ???                              #" << endl;
-    cin >> tcp.sequence;
-
-    cout << "#  Acknowledge ???                            #" << endl;
-    cin >> tcp.acknowledge;
-
-    cout << "#  Nonce Sum Flag: ???                        #" << endl;
-    unsigned char ns;
-    cin >> ns;
-    tcp.ns = ns;
-
-    cout << "#  Reserved Part ???                          #" << endl;
-    unsigned char reserved_part;
-    cin >> reserved_part;
-    tcp.reserved_part1 = reserved_part;
-
-    cout << "#  Data offset ???                            #" << endl;
-    unsigned char data_offset;
-    cin >> data_offset;
-    tcp.data_offset = data_offset;
-
-    cout << "#  FIN ???                                    #" << endl;
-    unsigned char fin;
-    cin >> fin;
-    tcp.fin = fin;
-
-    cout << "#  SYN ???                                    #" << endl;
-    unsigned char syn;
-    cin >> syn;
-    tcp.syn = syn;
-
-    cout << "#  RST ???                                    #" << endl;
-    unsigned char rst;
-    cin >> rst;
-    tcp.rst = rst;
-
-    cout << "#  PSH ???                                    #" << endl;
-    unsigned char psh;
-    cin >> psh;
-    tcp.psh = psh;
-
-    cout << "#  ACK???                                     #" << endl;
-    unsigned char ack;
-    cin >> ack;
-    tcp.ack = ack;
-
-    cout << "#  URG ???                                    #" << endl;
-    unsigned char urg;
-    cin >> urg;
-    tcp.urg = urg;
-
-    cout << "#  ECN-Echo Flag ???                          #" << endl;
-    unsigned char ecn;
-    cin >> ecn;
-    tcp.ecn = ecn;
-
-    cout << "#  Congestion Window Reduced ???              #" << endl;
-    unsigned char cwr;
-    cin >> cwr;
-    tcp.cwr = cwr;
-
-    cout << "#  Window: ???                                #" << endl;
-    cin >> tcp.window;
-
-    cout << "#  Checksum: ???                              #" << endl;
-    cin >> tcp.checksum;
-
-    cout << "#  Urgent Pointer : ???                       #" << endl;
-    cin >> tcp.urgent_pointer;
-
-
-    cout << "###############################################" << endl;
-
-
-
-    system("CLS");
-}
 
 int main()
 {
-    /*
+
     int choix = menu_start();
     switch(choix) {
         case 1 :
-          //  ouverture_connexion();
+
             break;
         case 2 :
             break;
@@ -263,14 +271,14 @@ int main()
         case 4 :
             break;
     }
-*/
+
 
 
     SOCKADDR_IN dest{ 0 };
     char buf[PACKET_MAX_SIZE];
     int sock;
     if ((sock = init_sock_ip(buf, dest)) == -1)
-        "C LA MERDE";
+        "Init Sock IP";
 
     size_t size = craft_packet(buf);
     printf("\nSending packet...\n");
