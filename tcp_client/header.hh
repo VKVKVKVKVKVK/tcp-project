@@ -1,8 +1,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <winsock2.h>
-#include <ws2tcpip.h> //IP_HDRINCL is here
 #include <conio.h>
 #include <string>
 #include <vector>
