@@ -3,5 +3,5 @@ project(tcp_client)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(tcp_client client.cpp)
+add_executable(tcp_client client.cpp ../common/common.cpp)
 target_link_libraries(tcp_client)
