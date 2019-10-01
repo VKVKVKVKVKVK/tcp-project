@@ -37,8 +37,59 @@ namespace Color {
 }
 
 
+unsigned short csum(unsigned short *buf, int nwords)
+{
+  unsigned long sum;
+  for(sum=0; nwords>0; nwords--)
+    sum += *buf++;
+  sum = (sum >> 16) + (sum &0xffff);
+  sum += (sum >> 16);
+  return (unsigned short)(~sum);
+}
 
 
+void craft_packet(unsigned char* buffer, flags f, u_int16_t src_port, u_int16_t dst_port)
+{
+  struct tcphdr *tcp = (struct tcphdr *)buffer;
+
+  tcp->source = htons(src_port);
+  tcp->dest = htons(dst_port);
+  tcp->ack_seq = 0;//
+  tcp->res1 = 0; //
+  tcp->fin = f.fin; //
+  tcp->rst = 0; //
+  tcp->psh = 0; //
+  tcp->ack = f.ack; //
+  tcp->urg = 1; //
+  tcp->ece = 0; //
+  tcp->cwr = 0; //
+  tcp->doff = 5; //
+  tcp->syn = f.syn; //
+  tcp->seq = 456; //
+  tcp->urg_ptr = 0; //
+  tcp->window = 1000; //
+
+  tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
+}
+
+int reply(int sock, flags f, in_addr_t ip, u_int16_t sport, u_int16_t dport)
+{
+#define PCKT_LEN 8192
+    unsigned char buffer[PCKT_LEN]{0};
+    craft_packet(buffer, f, sport, dport);
+    struct sockaddr_in sin{0};
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(dport);
+    sin.sin_addr.s_addr = ip;
+    if (sendto(sock, buffer, sizeof(struct tcphdr), 0,
+	       (struct sockaddr *)&sin, sizeof(sin)) < 0)
+    {
+	perror("sendto()");
+	exit(3);
+    }
+    printf("OK: one packet is sent.\n");
+    return 0;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -53,7 +104,7 @@ int main(int argc, char const *argv[])
 
     // Allocate string buffer to hold incoming packet data
     unsigned char buffer[65536];
-    struct sockaddr_in sin;
+    //struct sockaddr_in sin;
     memset(buffer, 0, 65536);
     // Open the raw socket
     int sock = socket (PF_INET, SOCK_RAW, IPPROTO_TCP);
@@ -90,9 +141,9 @@ int main(int argc, char const *argv[])
 
       print_segment(tcp, buffer);
       
-
       struct flags flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
-      
+      system("sleep 1");
+      reply(sock, flag, ip->saddr, ntohs(tcp->dest), ntohs(tcp->source));
     }
 
     return 0;
@@ -209,5 +260,5 @@ void print_segment(tcphdr* tcph, unsigned char* buff){
 
     cout << green <<"Payload ===>  " ;
 
-    cout << red << buff + sizeof(tcphdr) << endl;
+    cout << red << (char*)(tcph) + sizeof(tcphdr) << endl;
 }
