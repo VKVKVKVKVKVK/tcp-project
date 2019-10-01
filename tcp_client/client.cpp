@@ -72,9 +72,9 @@ int main(int argc, char const *argv[])
 
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
 
-
-  memcpy(buffer + sizeof(struct tcphdr), "coucou", sizeof("coucou"));
-  if (sendto(sd, buffer, sizeof(struct tcphdr) + 6, 0,
+  std::string syn("This is a SYN message.");
+  memcpy(buffer + sizeof(struct tcphdr), &syn[0], syn.length());
+  if (sendto(sd, buffer, sizeof(struct tcphdr) + syn.length(), 0,
              (struct sockaddr *)&sin, sizeof(sin)) < 0)
   {
     perror("sendto()");
@@ -96,6 +96,7 @@ int main(int argc, char const *argv[])
   print_segment((tcphdr*)(buffer + sizeof(struct iphdr)), buffer);
   ///////////////////////
 
+  //call reply avec last ACK FIXME
   close(sd);
   return 0;
 }

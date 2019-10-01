@@ -45,7 +45,11 @@ int reply(int sock, flags f, in_addr_t ip, u_int16_t sport, u_int16_t dport)
     sin.sin_family = AF_INET;
     sin.sin_port = htons(dport);
     sin.sin_addr.s_addr = ip;
-    if (sendto(sock, buffer, sizeof(struct tcphdr), 0,
+
+    std::string synack("This is a SYN+ACK message.");
+    memcpy(buffer + sizeof(struct tcphdr), &synack[0],synack.length());
+
+    if (sendto(sock, buffer, sizeof(struct tcphdr) + synack.length(), 0,
 	       (struct sockaddr *)&sin, sizeof(sin)) < 0)
     {
 	perror("sendto()");
