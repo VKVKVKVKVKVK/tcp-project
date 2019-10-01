@@ -12,6 +12,7 @@
 
 using namespace std;
 void print_segment(tcphdr* tcph, unsigned char* buff);
+void centerstring(string s, int field);
 
 namespace Color {
     enum Code {
@@ -97,6 +98,24 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
+void centerstring(string s, int field)
+{
+    Color::Modifier red(Color::FG_RED);
+    Color::Modifier green(Color::FG_GREEN);
+    Color::Modifier def(Color::FG_DEFAULT);
+
+    int l=s.length();
+    int pos=(int)((field-l)/2);
+    for(int i=0;i<pos;i++)
+        cout<<" ";
+
+    cout<< red <<s;
+    for(int i=0;i<pos;i++)
+        cout<<" ";
+    if (s.length()%2 == 0) {
+        cout << " ";
+    }
+}
 
 void print_segment(tcphdr* tcph, unsigned char* buff){
 
@@ -104,67 +123,44 @@ void print_segment(tcphdr* tcph, unsigned char* buff){
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    /*
-    cout << "Source Port: "  << tcph->source_port << endl;
-    cout << "Dest Port: "  << tcph->dest_port << endl;
-    cout << "CWR: "  << to_string(tcph->cwr) << endl;
-    cout << "ECN: "  << to_string(tcph->ecn) << endl;
-    cout << "URG: "  << to_string(tcph->urg) << endl;
-    cout << "ACK: "  << to_string(tcph->ack) << endl;
-    cout << "PSH: "  << to_string(tcph->psh) << endl;
-    cout << "RST: "  << to_string(tcph->rst) << endl;
-    cout << "SYN: "  << to_string(tcph->syn) << endl;
-    cout << "FIN: "  << to_string(tcph->fin) << endl;
-    cout << "NS: "  << to_string(tcph->ns) << endl;
-    cout << "Sequence: "  << tcph->sequence << endl;
-    cout << "ACKNOWLEDGE: "  << tcph->acknowledge << endl;
-    cout << "Reserved Part1: "  << to_string(tcph->reserved_part1) << endl;
-    cout << "Data offset: "  << to_string(tcph->data_offset) << endl;
-    cout << "Window: "  << tcph->window << endl;
-    cout << "Checksum: "  << tcph->checksum << endl;
-    cout << "Urgent Pointer: "  << tcph->urgent_pointer << endl;
-*/
-
     cout << green << " 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 " << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
     cout << green << "|        Source Port            |        Destination Port       |" << endl;
-    cout << green << "|        ";
+    cout << green << "|";
 
-    cout << red << ntohs(tcph->source);
+    centerstring(std::to_string(ntohs(tcph->source)), 31);
+    cout << green << "|";
 
-    cout << green << "                   |        ";
-
-    cout << red << ntohs(tcph->dest);
-
-    cout << green << "                  |" << endl;
+    centerstring(std::to_string(ntohs(tcph->dest)), 31);
+    cout << green << "|" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
     cout << green << "|                       Sequence  Number                        |" << endl;
-    cout << green << "|                       ";
+    cout << green << "|";
 
-    cout << red << tcph->seq;
+    centerstring(std::to_string(tcph->seq), 63);
 
-    cout << green <<"                                     |" << endl;
+    cout << green <<"|" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
     cout << green << "|                     Acknowledgment Number                     |" << endl;
-    cout << green <<"|                     ";
+    cout << green <<"|";
 
-    cout << red << tcph->ack_seq;
+    centerstring(std::to_string(tcph->ack_seq), 63);
 
-    cout << green <<"                                         |" << endl;
+    cout << green <<"|" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
-    cout << green <<"| Offset|  Reserved |   Flags   |             Window            |" << endl;
+    cout << green <<"| Offset|  Reserved |   Flags   |            Window             |" << endl;
     cout << green <<"|       |           |U|A|P|R|S|F|                               |" << endl;
     cout << green <<"|       |           |R|C|S|S|Y|I|                               |" << endl;
     cout << green <<"|       |           |G|K|H|T|N|N|                               |" << endl;
-    cout << green <<"|   ";
+    cout << green <<"|";
 
-    cout << red << to_string(tcph->doff);
+    centerstring(std::to_string(tcph->doff), 7);
 
-    cout << green << "   |     ";
+    cout << green << "|";
 
-    cout << red << to_string(tcph->res1);
+    centerstring(std::to_string(tcph->res1), 11);
 
-    cout << green << "     |";
+    cout << green << "|";
 
     cout<< red <<to_string(tcph->urg);
 
@@ -190,28 +186,27 @@ void print_segment(tcphdr* tcph, unsigned char* buff){
 
     cout << green << "|";
 
-    cout << "             " << red << tcph->window;
+    centerstring(std::to_string(tcph->window), 31);
 
-    cout << green << "                 |" << endl;
+
+    cout << green << "|" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
     cout << green << "|            Checksum           |         Urgent Pointer        |" << endl;
-    cout << green <<"|            ";
+    cout << green << "|";
 
-    cout << red << tcph->check;
+    centerstring(std::to_string(tcph->check), 31);
 
-    cout << green << "                  |            ";
+    cout << green << "|";
 
-    cout << red << tcph->urg_ptr;
+    centerstring(std::to_string(tcph->urg_ptr), 31);
 
-    cout << green << "                  |" << endl;
+
+    cout << green << "|" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
     cout << green << "|                    Options                    |    Padding    |" << endl;
     cout << green << "|                                               |               |" << endl;
     cout << green << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+" << endl;
 
-
-
-    // cout << buff + sizeof(ip_hdr) << endl;
     cout << green <<"Payload ===>  " ;
 
     cout << red << buff + sizeof(tcphdr) << endl;
