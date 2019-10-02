@@ -10,6 +10,15 @@ unsigned short csum(unsigned short *buf, int nwords)
   return (unsigned short)(~sum);
 }
 
+void temp_sleep(){
+    sleep(1);
+    cout << "->" << endl;
+    sleep(1);
+    cout << "-->" << endl;
+    sleep(1);
+    cout << "--->|" << endl;
+    sleep(1);
+}
 
 void centerstring(string s, int field)
 {

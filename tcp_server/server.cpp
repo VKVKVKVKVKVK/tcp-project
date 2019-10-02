@@ -2,6 +2,7 @@
 #include <iostream>
 #include<stdio.h>
 #include<stdlib.h>
+#include<unistd.h>
 #include<string.h>
 #include<linux/ip.h>
 #include<linux/tcp.h>
@@ -19,6 +20,7 @@ void craft_packet(unsigned char* buffer, flags f, u_int16_t src_port, u_int16_t 
 
   tcp->source = htons(src_port);
   tcp->dest = htons(dst_port);
+
   tcp->ack_seq = 0;//
   tcp->res1 = 0; //
   tcp->fin = f.fin; //
@@ -55,6 +57,9 @@ int reply(int sock, flags f, in_addr_t ip, u_int16_t sport, u_int16_t dport)
 	perror("sendto()");
 	exit(3);
     }
+    cout << "Replying ..." << endl;
+    temp_sleep();
+
     printf("OK: one packet is sent.\n");
     return 0;
 }
@@ -125,6 +130,7 @@ int main(int argc, char const *argv[])
             flag = automate(state, false, false, false, false);
         }
 
+        sleep(1);
         printf("A packet has been received.\n");
       print_segment(tcp, buffer);
 
@@ -169,6 +175,7 @@ int main(int argc, char const *argv[])
                 flag = automate(state, false, false, false, false);
             }
 
+            temp_sleep();
             printf("A packet has been received.\n");
             print_segment(tcpbis, bufferbis);
 

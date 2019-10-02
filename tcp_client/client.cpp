@@ -14,6 +14,8 @@
 
 using namespace std;
 
+void ouverture_connexion(tcphdr *tcp, unsigned char *buffer);
+
 void craft_packet(unsigned char* buffer, flags f, u_int16_t src_port, u_int16_t dst_port)
 {
     struct tcphdr *tcp = (struct tcphdr *)buffer;
@@ -104,28 +106,35 @@ int main(int argc, char const *argv[])
   sin.sin_addr.s_addr = dst_addr;
 
   //////////CRAFTING TCP HEADER
-  tcp->source = htons(src_port);
-  tcp->dest = htons(dst_port);
-  tcp->ack_seq = 0;//
-  tcp->res1 = 0; //
-  tcp->fin = 0; //
-  tcp->rst = 0; //
-  tcp->psh = 0; //
-  tcp->ack = 0; //
-  tcp->urg = 0; //
-  tcp->ece = 0; //
-  tcp->cwr = 0; //
-  tcp->doff = 0; //
-  tcp->syn = 1; //
-  tcp->seq = 0; //
-  tcp->urg_ptr = 0; //
-  tcp->window = 1000; //
+  tcp->source = htons(src_port); //
+  tcp->dest = htons(dst_port); //
+
+
+  ouverture_connexion(tcp, buffer);
+  tcp->ack_seq = 0;
+  tcp->res1 = 0;
+ // tcp->fin = 0; //
+ // tcp->rst = 0; //
+ // tcp->psh = 0; //
+ // tcp->ack = 0; //
+ // tcp->urg = 0; //
+  tcp->ece = 0;
+  tcp->cwr = 0;
+  tcp->doff = 0;
+ // tcp->syn = 1;  //
+  tcp->seq = 0;
+  tcp->urg_ptr = 0;
+ // tcp->window = 1000; //
+
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
 
 
   /////////// SENDING SYN TO SERVER//////////////////
   std::string syn("This is a SYN message.");
   memcpy(buffer + sizeof(struct tcphdr), &syn[0], syn.length());
+
+    temp_sleep();
+
   if (sendto(sd, buffer, sizeof(struct tcphdr) + syn.length(), 0,
              (struct sockaddr *)&sin, sizeof(sin)) < 0)
   {
@@ -135,12 +144,13 @@ int main(int argc, char const *argv[])
   printf("OK: one packet is sent.\n\n");
 
 
+
   /////////// INIT AUTOMAT TO SYN_SENT/////////////////
   state = 3;
   flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
 
 
-  ////////// LSITENING TO SERVER REPLY (ACK+SYN)//////
+  ////////// LISTENING TO SERVER REPLY (ACK+SYN)//////
   do
   {
       memset(buffer, 0, sizeof(struct iphdr) + sizeof(struct tcphdr) + 1); //fixme: size
@@ -154,6 +164,8 @@ int main(int argc, char const *argv[])
 
 
   //////// INIT AUTOMAT TO SYN_RCVD///////////////////////
+  temp_sleep();
+
   printf("A packet has been received.\n");
   state = 2;
   flag = automate(state, true, true, false, false);
@@ -181,27 +193,23 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-/*
-void ouverture_connexion(tcphdr *tcp){
+
+void ouverture_connexion(tcphdr *tcp, unsigned char *buffer){
+
+    Color::Modifier green(Color::FG_GREEN);
+    Color::Modifier def(Color::FG_DEFAULT);
+    Color::Modifier blue(Color::FG_BLUE);
+
+    //system("CLS");
+    cout << green << "###############################################" << endl;
+    cout << green << "#                                             #" << endl;
+    cout << green << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
+    cout << green << "#  saisir les parametres:                     #" << endl;
+    cout << green << "#                                             #" << endl;
+    cout << green << "###############################################\n" << def << endl;
 
 
-    system("CLS");
-    cout << "###############################################" << endl;
-    cout << "#                                             #" << endl;
-    cout << "#  Vous avez demander l'ouverture de TCP,     #" << endl;
-    cout << "#  saisir les parametres:                     #" << endl;
-    cout << "#                                             #" << endl;
-    cout << "###############################################\n" << endl;
 
-
-
-    cout << "#  Acknowledge number???                            #" << endl;
-    cin >> tcp->ack_seq;
-
-    cout << "#  Reserved Part ???                          #" << endl;
-    unsigned char reserved_part;
-    cin >> reserved_part;
-    tcp->res1 = reserved_part;
 
     cout << "#  FIN ???                                    #" << endl;
     unsigned char fin;
@@ -228,20 +236,6 @@ void ouverture_connexion(tcphdr *tcp){
     cin >> urg;
     tcp->urg = urg;
 
-    cout << "#  ECN-Echo Flag ???                          #" << endl;
-    unsigned char ecn;
-    cin >> ecn;
-    tcp->ece = ecn;
-
-    cout << "#  Congestion Window Reduced ???              #" << endl;
-    unsigned char cwr;
-    cin >> cwr;
-    tcp->cwr = cwr;
-
-    cout << "#  Data offset ???                            #" << endl;
-    unsigned char data_offset;
-    cin >> data_offset;
-    tcp->doff = data_offset;
 
     cout << "#  SYN ???                                    #" << endl;
     unsigned char syn;
@@ -249,21 +243,28 @@ void ouverture_connexion(tcphdr *tcp){
     tcp->syn = syn;
 
 
-    cout << "#  Sequence: ???                              #" << endl;
-    cin >> tcp->seq;
-
-
-    cout << "#  Urgent Pointer : ???                       #" << endl;
-    cin >> tcp->urg_ptr;
-
-
     cout << "#  Window: ???                                #" << endl;
     cin >> tcp->window;
 
-    cout << "###############################################" << endl;
+    cout << green << "###############################################\n\n" << def << endl;
 
+    print_segment(tcp, buffer);
+    cout << endl;
 
+    int choix;
+    cout << blue << "1) Envoyer le segment ? " << endl;
+    cout << blue << "2) Modifier le segment ?" << def << endl;
 
-    system("CLS");
+    cin >> choix;
+    switch (choix){
+        case 1:
+            break;
+        case 2:
+            ouverture_connexion(tcp, buffer);
+        default:
+            break;
+    }
+
+   // system("CLS");
 }
-*/
+
