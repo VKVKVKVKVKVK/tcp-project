@@ -14,19 +14,30 @@ struct flags {
 
 
 flags automate(int state, bool syn, bool ack, bool fin, bool client) {
+    Color::Modifier blue(Color::FG_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+
     flags ret;
 
     //CLOSED
     if (state == 0)
     {
-        cout << "CLOSED" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   CLOSED   ##################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         state = 1; //ouverture passive
     }
 
     // LISTEN
     else if (state == 1)
     {
-        cout << "LISTEN" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   LISTEN   ##################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (syn)
         {
             state = 2;
@@ -43,7 +54,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //SYN_RECVD
     else if (state == 2)
     {
-        cout << "SYN_RECVD" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   SYN_RCVD   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (ack)
         {
             state = 4;
@@ -53,7 +68,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //SYN_SENT
     else if (state == 3)
     {
-        cout << "SYN_SENT" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   SYN_SENT   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (syn && ack)
         {
             state = 4;
@@ -71,7 +90,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //ESTABLISHED
     else if (state == 4)
     {
-        cout << "ESTABLISHED" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "##############   ESTABLISHED   ###############" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (fin)
         {
             state = 6;
@@ -82,7 +105,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //FIN_WAIT_1
     else if (state == 5)
     {
-        cout << "FIN_WAIT_1" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "###############   FIN_WAIT1   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (fin && ack)
         {
             state = 10;
@@ -102,14 +129,22 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //CLOSE_WAIT
     else if (state == 6)
     {
-        cout << "CLOSE_WAIT" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "##############   CLOSE_WAIT   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         ret.fin = true;
     }
 
     //CLOSING
     else if (state == 7)
     {
-        cout << "CLOSING" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   CLOSING   #################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (ack)
         {
             state = 10;
@@ -119,7 +154,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //FIN_WAIT_2
     else if (state == 8)
     {
-        cout << "FIN_WAIT_2" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "###############   FIN_WAIT2   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (fin)
         {
             ret.ack = true;
@@ -130,7 +169,11 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //LAST_ACK
     else if (state == 9)
     {
-        cout << "LAST_ACK" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "################   LAST_ACK   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
+
         if (ack)
         {
             state = 0;
@@ -140,7 +183,10 @@ flags automate(int state, bool syn, bool ack, bool fin, bool client) {
     //TIMED_WAIT
     else if (state == 10)
     {
-        cout << "TIMED_WAIT" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << blue << "###############   TIME_WAIT   ################" << endl;
+        cout << blue << "##############################################" << endl;
+        cout << def << endl;
         state = 0;
     }
 

@@ -10,8 +10,55 @@
 #include <linux/tcp.h>
 
 #include "../common/common.h"
+#include "../automates/automate.cpp"
 
 using namespace std;
+
+void craft_packet(unsigned char* buffer, flags f, u_int16_t src_port, u_int16_t dst_port)
+{
+    struct tcphdr *tcp = (struct tcphdr *)buffer;
+
+    tcp->source = htons(src_port);
+    tcp->dest = htons(dst_port);
+    tcp->ack_seq = 0;//
+    tcp->res1 = 0; //
+    tcp->fin = f.fin; //
+    tcp->rst = 0; //
+    tcp->psh = 0; //
+    tcp->ack = f.ack; //
+    tcp->urg = 0; //
+    tcp->ece = 0; //
+    tcp->cwr = 0; //
+    tcp->doff = 0; //
+    tcp->syn = f.syn; //
+    tcp->seq = 0; //
+    tcp->urg_ptr = 0; //
+    tcp->window = 1000; //
+
+    tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
+}
+
+int reply(int sock, flags f, in_addr_t ip, u_int16_t sport, u_int16_t dport)
+{
+    unsigned char buffer[PCKT_LEN]{0};
+    craft_packet(buffer, f, sport, dport);
+    struct sockaddr_in sin{0};
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(dport);
+    sin.sin_addr.s_addr = ip;
+
+    std::string synack("This is the last ACK.");
+    memcpy(buffer + sizeof(struct tcphdr), &synack[0],synack.length());
+
+    if (sendto(sock, buffer, sizeof(struct tcphdr) + synack.length(), 0,
+               (struct sockaddr *)&sin, sizeof(sin)) < 0)
+    {
+        perror("sendto()");
+        exit(3);
+    }
+    printf("OK: one packet is sent.\n");
+    return 0;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -31,14 +78,18 @@ int main(int argc, char const *argv[])
   int sd;
   unsigned char buffer[PCKT_LEN];
   struct tcphdr *tcp = (struct tcphdr *)buffer;
-
   struct sockaddr_in sin;
   int one = 1;
   const int *val = &one;
 
   memset(buffer, 0, PCKT_LEN);
 
-  // create a raw socket with TCP protocol
+  // INITIALISING AUTOMATE TO CLOSED STATE
+  int state = 0;
+  struct flags flag = automate(state, false, false, false, false);
+
+
+  // CREATING RAW SOCKET
   sd = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
   if (sd < 0) {
     perror("socket() error");
@@ -46,32 +97,33 @@ int main(int argc, char const *argv[])
   }
   printf("OK: a raw socket is created.\n");
 
+
+
   sin.sin_family = AF_INET;
   sin.sin_port = htons(dst_port);
   sin.sin_addr.s_addr = dst_addr;
 
+  //////////CRAFTING TCP HEADER
   tcp->source = htons(src_port);
   tcp->dest = htons(dst_port);
-
   tcp->ack_seq = 0;//
   tcp->res1 = 0; //
   tcp->fin = 0; //
   tcp->rst = 0; //
   tcp->psh = 0; //
   tcp->ack = 0; //
-  tcp->urg = 1; //
+  tcp->urg = 0; //
   tcp->ece = 0; //
   tcp->cwr = 0; //
-  tcp->doff = 5; //
+  tcp->doff = 0; //
   tcp->syn = 1; //
-  tcp->seq = 456; //
+  tcp->seq = 0; //
   tcp->urg_ptr = 0; //
   tcp->window = 1000; //
-
-
-
   tcp->check = csum((unsigned short *)buffer, sizeof(struct tcphdr));
 
+
+  /////////// SENDING SYN TO SERVER//////////////////
   std::string syn("This is a SYN message.");
   memcpy(buffer + sizeof(struct tcphdr), &syn[0], syn.length());
   if (sendto(sd, buffer, sizeof(struct tcphdr) + syn.length(), 0,
@@ -80,9 +132,15 @@ int main(int argc, char const *argv[])
     perror("sendto()");
     exit(3);
   }
-  printf("OK: one packet is sent.\n");
+  printf("OK: one packet is sent.\n\n");
 
-  ///////////////////////
+
+  /////////// INIT AUTOMAT TO SYN_SENT/////////////////
+  state = 3;
+  flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
+
+
+  ////////// LSITENING TO SERVER REPLY (ACK+SYN)//////
   do
   {
       memset(buffer, 0, sizeof(struct iphdr) + sizeof(struct tcphdr) + 1); //fixme: size
@@ -93,10 +151,32 @@ int main(int argc, char const *argv[])
 	  return 1;
       }
   } while(((struct tcphdr*)(buffer + sizeof(struct iphdr)))->dest != htons(src_port));
-  print_segment((tcphdr*)(buffer + sizeof(struct iphdr)), buffer);
-  ///////////////////////
 
-  //call reply avec last ACK FIXME
+
+  //////// INIT AUTOMAT TO SYN_RCVD///////////////////////
+  printf("A packet has been received.\n");
+  state = 2;
+  flag = automate(state, true, true, false, false);
+
+  print_segment((tcphdr*)(buffer + sizeof(struct iphdr)), buffer);
+
+
+
+    //////////LAST ACK TO SERVER BEFORE ESTABLISHING CONNECTION//////////////
+
+    struct iphdr *ip = (struct iphdr *)buffer;
+    struct tcphdr *tcpbis = (struct tcphdr *)(buffer + sizeof(struct iphdr));
+
+    state = 3;
+    flag = automate(state, tcpbis->syn, tcpbis->ack, tcpbis->fin, false);
+    reply(sd, flag, ip->saddr, ntohs(tcpbis->dest), ntohs(tcpbis->source));
+    /////////////////////////////////////////////////////////////////////////
+
+
+    state = 4;
+    flag = automate(state, false, false, false, false);
+
+
   close(sd);
   return 0;
 }

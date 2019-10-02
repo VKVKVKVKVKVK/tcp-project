@@ -25,12 +25,12 @@ void craft_packet(unsigned char* buffer, flags f, u_int16_t src_port, u_int16_t 
   tcp->rst = 0; //
   tcp->psh = 0; //
   tcp->ack = f.ack; //
-  tcp->urg = 1; //
+  tcp->urg = 0; //
   tcp->ece = 0; //
   tcp->cwr = 0; //
-  tcp->doff = 5; //
+  tcp->doff = 0; //
   tcp->syn = f.syn; //
-  tcp->seq = 456; //
+  tcp->seq = 0; //
   tcp->urg_ptr = 0; //
   tcp->window = 1000; //
 
@@ -62,8 +62,6 @@ int reply(int sock, flags f, in_addr_t ip, u_int16_t sport, u_int16_t dport)
 int main(int argc, char const *argv[])
 {
     u_int16_t port = atoi(argv[1]);
-   
-    int state = 1; //LISTEN 
 
     // Structs that contain source IP addresses
     struct sockaddr_in source_socket_address, dest_socket_address;
@@ -74,6 +72,11 @@ int main(int argc, char const *argv[])
     unsigned char buffer[65536];
     //struct sockaddr_in sin;
     memset(buffer, 0, 65536);
+
+    // INIT AUTOMAT TO CLOSED
+    int state = 0;
+    struct flags flag = automate(state, false, false, false, false);
+
     // Open the raw socket
     int sock = socket (PF_INET, SOCK_RAW, IPPROTO_TCP);
     if(sock == -1)
@@ -82,6 +85,13 @@ int main(int argc, char const *argv[])
         perror("Failed to create socket");
         exit(1);
     }
+
+    printf("OK: a socket has been created.\n\n");
+
+    // SET AUTOMATE TO LISTEN
+    state = 1;
+    flag = automate(state, false, false, false, false);
+
     while(1)
     {
       packet_size = recvfrom(sock , buffer , 65536 , 0 , NULL, NULL);
@@ -96,10 +106,10 @@ int main(int argc, char const *argv[])
       //check if dest port is equal to one of server
       if (ntohs(tcp->dest) != port)
       {
-	printf("Not the correct port!\n");
-	ip = NULL;
-	tcp = NULL;
-	continue;
+        //printf("Not the correct port!\n");
+        ip = NULL;
+        tcp = NULL;
+        continue;
       }
 
       memset(&source_socket_address, 0, sizeof(source_socket_address));
@@ -107,10 +117,65 @@ int main(int argc, char const *argv[])
       memset(&dest_socket_address, 0, sizeof(dest_socket_address));
       dest_socket_address.sin_addr.s_addr = ip->daddr;
 
+      // SET AUTOMAT TO SYN_RECV
+      state = 2;
+        if (ntohs(tcp->dest) != port){
+            continue;
+        } else {
+            flag = automate(state, false, false, false, false);
+        }
+
+        printf("A packet has been received.\n");
       print_segment(tcp, buffer);
-      
-      struct flags flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
+
+
+       state = 3;
+        flag = automate(state, tcp->syn, tcp->ack, tcp->fin, false);
       reply(sock, flag, ip->saddr, ntohs(tcp->dest), ntohs(tcp->source));
+
+        while(1) {
+
+            unsigned char bufferbis[65536];
+            //struct sockaddr_in sin;
+            memset(bufferbis, 0, 65536);
+
+            packet_size = recvfrom(sock, bufferbis, 65536, 0, NULL, NULL);
+            if (packet_size == -1) {
+                printf("Failed to get packets\n");
+                return 1;
+            }
+
+            struct iphdr *ipbis = (struct iphdr *) bufferbis;
+            struct tcphdr *tcpbis = (struct tcphdr *) (bufferbis + sizeof(struct iphdr));
+
+            //check if dest port is equal to one of server
+            if (ntohs(tcpbis->dest) != port) {
+                //printf("Not the correct port!\n");
+                ipbis = NULL;
+                tcpbis = NULL;
+                continue;
+            }
+
+            memset(&source_socket_address, 0, sizeof(source_socket_address));
+            source_socket_address.sin_addr.s_addr = ipbis->saddr;
+            memset(&dest_socket_address, 0, sizeof(dest_socket_address));
+            dest_socket_address.sin_addr.s_addr = ipbis->daddr;
+
+            // SET AUTOMAT TO SYN_RECV
+            state = 2;
+            if (ntohs(tcpbis->dest) != port) {
+                continue;
+            } else {
+                flag = automate(state, false, false, false, false);
+            }
+
+            printf("A packet has been received.\n");
+            print_segment(tcpbis, bufferbis);
+
+            state = 4;
+            flag = automate(state, false, false, false, false);
+
+        }
     }
 
     return 0;
